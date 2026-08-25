@@ -1,0 +1,11 @@
+<menu>
+    <items>
+        <helloworld 
+            visible="true" 
+            configd_actions="" 
+            url="/ui/helloworld" 
+            label="Hello World" 
+            css_class="fa fa-smile-o" 
+            sequence="999"/>
+    </items>
+</menu>

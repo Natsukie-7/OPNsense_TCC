@@ -1,0 +1,9 @@
+<acl>
+    <page-user-userregister>
+        <name>System: User Register</name>
+        <patterns>
+            <pattern>ui/user_register/*</pattern>
+            <pattern>api/user_register/*</pattern>
+        </patterns>
+    </page-user-userregister>
+</acl>

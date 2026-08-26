@@ -1,0 +1,5 @@
+<menu>
+    <Lobby>
+        <CadastroAlunos order="400" visiblename="Cadastro de alunos" url="/ui/user_register/" cssClass="fa fa-user-plus"/>
+    </Lobby>
+</menu>

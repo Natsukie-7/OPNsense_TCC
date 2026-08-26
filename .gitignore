@@ -1,0 +1,36 @@
+# ----------------------------------------------------------------------
+# Artefatos de Build do OPNsense / FreeBSD
+# ----------------------------------------------------------------------
+# Ignora a pasta temporária de compilação criada pelo 'make'
+work/
+# Ignora os pacotes gerados
+*.pkg
+*.txz
+*.tar.gz
+*.tar.bz2
+
+# ----------------------------------------------------------------------
+# VS Code e IDEs
+# ----------------------------------------------------------------------
+# Ignoramos o settings.json pois ele tem o caminho específico do seu PC
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+
+# ----------------------------------------------------------------------
+# Arquivos do Sistema Operacional
+# ----------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ----------------------------------------------------------------------
+# Arquivos Temporários de Editores (Vim, Nano, etc)
+# ----------------------------------------------------------------------
+*.swp
+*.swo
+*~

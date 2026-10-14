@@ -1,115 +1,77 @@
-# Plano de Implementacao - User Register
+# Entrega e homologação · 2.0.0
 
-Este plano quebra a implementacao em entregas pequenas para reduzir retrabalho.
+## Implementado
 
-## Objetivo
+- [x] Leitura do formato real: abas por curso, A=matrícula, B=nome, sem cabeçalho obrigatório.
+- [x] Prévia paginada, filtros, resumo, confirmação e mensagens de erro.
+- [x] Validações no servidor, limites de ZIP/XML, bloqueio de fórmulas e prevenção de CSV injection.
+- [x] Importação por modelo nativo com locks, sem edição manual da configuração XML.
+- [x] Novas contas habilitadas sem privilégios/shell; existentes preservadas.
+- [x] Senhas individuais aleatórias, hash nativo, validade opcional.
+- [x] Lotes de dez, repetição idempotente, pausa/retomada e sincronização separada.
+- [x] Exportação de credenciais e remoção dos dados da sessão.
+- [x] ACL explícita por endpoint e proteção de sessão/CSRF pelo framework.
+- [x] Bundle com dependências travadas e instalador SSH com checksum e backup.
+- [x] Documentação de uso, contrato API, limites, privacidade e recuperação.
 
-Implementar um plugin OPNsense com UI e API para registro/gestao de usuarios, com padrao consistente de codigo e permissao.
+## Evidência local em 13/10/2026
 
-## Contexto atual (agosto/2026)
+- Planilha fornecida analisada somente em leitura: 1.193 registros, 10 abas, nenhuma duplicidade ou linha inválida.
+- 30 verificações de planilha/validação/segurança passaram.
+- 17 verificações do protocolo de sessão/importação passaram com adapters simulados.
+- PHP lint, sintaxe JavaScript, parse XML e auditoria Composer passaram.
+- SimpleXLSX 1.1.19 instalado pelo Composer; nenhuma vulnerabilidade conhecida reportada pela auditoria executada.
+- Teste com modelos nativos preparado, mas o PHP local não possui Phalcon. **Não considerar esse teste aprovado no Linux.** O instalador exige sua execução no ambiente OPNsense antes de alterar o pacote.
+- SSH da VM responde no endereço configurado; autenticação por chave recusada. Instalação e homologação dependem da autenticação no terminal.
 
-- Entrada de menu exibida no Lobby como `Cadastro de alunos`
-- Definicao de menu em `src/opnsense/mvc/app/models/OPNsense/UserRegister/Menu/Menu.xml`
-- Rota de UI atual: `/ui/user_register/`
-- Endpoint de teste atual: `/api/user_register/settings/get`
-- ACL atual liberando: `ui/user_register/*` e `api/user_register/*`
+## Checklist obrigatório na VM
 
-## Definicao de pronto (DoD)
+### Instalação e atualização
 
-Uma feature e considerada pronta quando:
+- [ ] Confirmar versão/arquitetura reais da VM e extensões PHP.
+- [ ] Fazer snapshot pelo hypervisor, mantendo acesso pelo console.
+- [ ] Executar pré-check SSH e confirmar identidade da chave do host.
+- [ ] Executar teste nativo isolado do instalador e verificar resultado.
+- [ ] Instalar o pacote; conferir verificação de checksums.
+- [ ] Verificar menu, abertura da tela, arquivos JS/CSS e ausência de erro PHP.
+- [ ] Testar atualização de uma instalação anterior sem perda de contas.
+- [ ] Confirmar localização do backup e testar rollback em snapshot de laboratório.
 
-- Tem criterio de aceite descrito
-- Possui rota UI/API mapeada (quando aplicavel)
-- Possui permissao no XML
-- Retorna erros previsiveis e mensagens claras
-- Foi validada manualmente no OPNsense
-- Foi documentada no contrato de API
+### Fluxo funcional, inicialmente com dados fictícios
 
-## Backlog por ordem sugerida
+- [ ] Importar duas abas, incluindo uma sem cabeçalho e RA com zeros iniciais.
+- [ ] Prévia não altera usuários nem configurações.
+- [ ] Confirmar cadastro e verificar usuários no gerenciador nativo.
+- [ ] Validar nome, comentário de curso, expiração e UID regular.
+- [ ] Confirmar ausência de shell, privilégios WebGUI, chaves e grupos privilegiados.
+- [ ] Baixar credenciais e validar o login individual de teste.
+- [ ] Reenviar a planilha: nenhuma senha, nome ou permissão existente é alterada.
+- [ ] Pausar e retomar sem duplicações; recarregar a página e recuperar o progresso.
+- [ ] Simular perda de conexão, retomar pelo offset e conferir contagens.
+- [ ] Falha de configd exibe pendência; nova tentativa não recria usuários.
+- [ ] Encerrar remove prévia/credenciais sem excluir usuários.
 
-## 1) Modelagem inicial
+### Segurança
 
-- Definir entidade principal e campos
-- Definir validacoes de negocio
-- Definir estrategia de persistencia
+- [ ] Usuário sem ACL não consegue abrir a tela nem chamar endpoints.
+- [ ] POST sem token CSRF é recusado pelo framework.
+- [ ] Token de prévia de outra sessão e API key são recusados.
+- [ ] GET de importação/download/limpeza retorna 405.
+- [ ] Campos malformados, fórmulas e arquivo acima do limite são rejeitados.
+- [ ] Nome conflitante para mesma matrícula bloqueia confirmação.
+- [ ] Aluno não recebe acesso administrativo à WebGUI ou ao SSH.
+- [ ] CSV é entregue individualmente e armazenado somente em local autorizado.
 
-Criterios de aceite:
+### Portal Cativo
 
-- Campos definidos e documentados
-- Casos invalidos mapeados
-- Estrategia de persistencia aprovada
+- [ ] Zona configurada na rede de teste e autenticador Local Database selecionado.
+- [ ] Cliente recebe DHCP/DNS e alcança o portal.
+- [ ] Senha correta autentica e libera acesso conforme regras existentes.
+- [ ] Senha incorreta, usuário desabilitado e conta expirada são recusados.
+- [ ] As regras e interfaces de produção não foram alteradas pelo plugin.
 
-## 2) API de leitura
+## Limites de escopo
 
-- Implementar endpoint de listagem/consulta
-- Padronizar formato de resposta
+Sem integração com ERP acadêmico, autorregistro público, exclusão em massa, envio de e-mail, redefinição automática de contas existentes ou gerenciamento de zonas/regras do Portal Cativo. Histórico persistente é o de configuração/auditoria do OPNsense; o relatório detalhado de importação é temporário. Não há transação única de toda a planilha nem recuperação de senha em claro após perda da sessão/CSV.
 
-Criterios de aceite:
-
-- Endpoint retorna status/message/data
-- Erro de validacao retorna status=error
-- View consegue consumir o retorno
-
-## 3) API de escrita
-
-- Implementar endpoint de criacao/atualizacao
-- Validar entradas obrigatorias
-
-Criterios de aceite:
-
-- Gravacao bem-sucedida
-- Erros de validacao claros
-- Sem quebra de fluxo na UI
-
-## 4) UI funcional
-
-- Exibir dados reais
-- Tratar loading, erro e sucesso
-- Remover dependencia de scripts inline grandes
-
-Criterios de aceite:
-
-- Fluxo principal completo na interface
-- Mensagens amigaveis ao usuario
-- Comportamento consistente apos reload
-
-## 5) Seguranca e permissao
-
-- Revisar escopo de permissao por rota
-- Garantir menor privilegio possivel
-
-Criterios de aceite:
-
-- Rotas protegidas corretamente
-- Nao ha acesso indevido para perfil sem permissao
-
-## 6) Qualidade de entrega
-
-- Validar build/deploy limpo
-- Testar instalacao em ambiente de teste
-- Atualizar README e contrato de API
-
-Criterios de aceite:
-
-- Deploy concluido sem erro
-- Fluxos principais validados
-- Documentacao atualizada
-
-## Checklist por PR
-
-- O que muda nesta PR?
-- Qual problema resolve?
-- Quais arquivos de permissao foram alterados?
-- Quais cenarios foram testados?
-- Existe impacto de compatibilidade?
-
-## Registro rapido de decisoes
-
-Use este bloco em cada iteracao:
-
-- Data:
-- Feature:
-- Decisao tomada:
-- Alternativas descartadas:
-- Risco aceito:
-- Proxima acao:
+Uma entrega só está **homologada na VM** depois de concluir os itens aplicáveis acima. Compilação e testes simulados não substituem esse aceite.

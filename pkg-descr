@@ -1,0 +1,4 @@
+Importacao de alunos a partir de planilhas XLSX com varias abas.
+Inclui previa, validacao de matriculas, criacao de contas locais sem
+privilegios administrativos, senhas individuais e exportacao de credenciais.
+Projetado para autenticacao Local Database no Portal Cativo do OPNsense.

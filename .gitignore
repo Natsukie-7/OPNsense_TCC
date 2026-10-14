@@ -34,3 +34,12 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Dependencias reproduzidas pelo composer.lock e dados pessoais
+vendor/
+dist/
+*.xlsx
+*.xls
+credenciais*.csv
+.env
+.deploy/

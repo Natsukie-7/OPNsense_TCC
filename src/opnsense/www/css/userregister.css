@@ -1,0 +1,26 @@
+#userregister { overflow: hidden; }
+#userregister .ur-header { padding: 28px 32px; background: #173047; color: #fff; border-top: 4px solid #d94f32; }
+#userregister .ur-header h1 { margin: 10px 0 12px; font-size: 28px; }
+#userregister .ur-eyebrow { font-size: 11px; letter-spacing: 2px; color: #d5e3ee; }
+#userregister .ur-steps { display: flex; flex-wrap: wrap; gap: 12px 30px; margin-top: 22px; color: #d5e3ee; }
+#userregister .ur-body { padding: 26px 32px; }
+#userregister .ur-upload { display: grid; grid-template-columns: minmax(240px, 2fr) minmax(180px, 1fr) auto; gap: 22px; align-items: start; }
+#userregister .ur-upload button { margin-top: 25px; }
+#userregister .ur-notice { margin-top: 12px; }
+#userregister .ur-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 24px 0 18px; }
+#userregister .ur-stats > div { padding: 18px; border: 1px solid #ccd4da; border-radius: 6px; }
+#userregister .ur-stats strong { display: block; font-size: 30px; color: #173047; }
+#userregister .ur-stats span { color: #555; }
+#userregister .ur-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+#userregister .ur-toolbar input { max-width: 330px; }
+#userregister .ur-toolbar select { max-width: 220px; }
+#userregister .ur-pagination, #userregister .ur-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+#userregister .ur-pagination { justify-content: flex-end; }
+#userregister .ur-progress { margin: 20px 0 8px; height: 10px; }
+#userregister td { vertical-align: middle; overflow-wrap: anywhere; }
+@media (max-width: 800px) {
+    #userregister .ur-upload { grid-template-columns: 1fr; gap: 4px; }
+    #userregister .ur-upload button { margin-top: 0; }
+    #userregister .ur-stats { grid-template-columns: repeat(2, 1fr); }
+    #userregister .ur-body, #userregister .ur-header { padding: 20px; }
+}

@@ -1,9 +1,14 @@
 <acl>
     <page-user-userregister>
-        <name>System: User Register</name>
+        <name>System: User Register — importar alunos e emitir credenciais</name>
         <patterns>
             <pattern>ui/user_register/*</pattern>
-            <pattern>api/user_register/*</pattern>
+            <pattern>api/user_register/settings/get</pattern>
+            <pattern>api/user_register/settings/preview</pattern>
+            <pattern>api/user_register/settings/import</pattern>
+            <pattern>api/user_register/settings/sync</pattern>
+            <pattern>api/user_register/settings/download</pattern>
+            <pattern>api/user_register/settings/clear</pattern>
         </patterns>
     </page-user-userregister>
 </acl>

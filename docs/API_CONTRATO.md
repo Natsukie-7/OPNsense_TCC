@@ -1,96 +1,66 @@
-# Contrato de API - User Register
+# Contrato de API · User Register 2.0
 
-Este documento define o padrao de resposta e os endpoints do plugin.
+Base: `/api/user_register/settings/`. Esta API atende a interface do plugin, **não é uma API pública de integração com ERPs**.
 
-## Padrao de resposta
+## Autenticação e segurança
 
-Sucesso:
+- Sessão autenticada da WebGUI e privilégio User Register do OPNsense.
+- Toda escrita/download exige POST e o cabeçalho CSRF nativo `X-CSRFToken`.
+- `ApiControllerBase` verifica autenticação, autorização e CSRF antes das ações. Não contornar esses checks.
+- Credenciais de API key são recusadas: a importação e as senhas pertencem à sessão do operador.
+- Payloads JSON nos POSTs, exceto upload, que utiliza `multipart/form-data`.
+- Respostas `Cache-Control: no-store, private` e `Pragma: no-cache`.
+- Um job por sessão. Prévia nova invalida token anterior; com credenciais já emitidas é obrigatório encerrar o job anterior primeiro.
+- Método incorreto: 405; dados/token/expiração inválidos: 400; sem autorização: 401/403 conforme framework; erro interno: 500.
+- Resposta comum: `status` igual a `ok`, `warning` ou `error`, com `message` quando necessário. Falhas internas não expõem stack traces, nomes ou senhas.
 
-{
-  "status": "success",
-  "message": "Mensagem curta",
-  "data": {}
-}
+## Endpoints
 
-Erro:
+| Método | Ação | Entrada | Saída |
+|---|---|---|---|
+| GET | `get` | nenhuma | `version`, `limits`, `job` ou `null` |
+| POST | `preview` | multipart: `file` XLSX e `expires` opcional | `job` com linhas e resumo; não cria contas |
+| POST | `import` | `token`, `offset` inteiro, `confirm: true` booleano | progresso após até dez candidatos |
+| POST | `sync` | `token` | sincroniza até dez contas pendentes; `warning` se houver falha |
+| POST | `download` | `token` | `csv`: texto CSV UTF-8 com BOM e separador `;` |
+| POST | `clear` | `token` | `status: ok`; elimina dados temporários, não contas |
 
-{
-  "status": "error",
-  "message": "Descricao do erro",
-  "data": {
-    "fields": {}
-  }
-}
+`expires`: vazio ou data futura estrita `YYYY-MM-DD`; aplicada somente às novas contas. Não há suporte a senha escolhida pelo cliente, atualização de usuários, grupos, shell ou privilégios no payload.
 
-Regras:
+## Estrutura pública do job
 
-- status: obrigatorio (success ou error)
-- message: obrigatorio e curto
-- data: opcional, objeto quando existir payload
+| Campo | Descrição |
+|---|---|
+| `token` | 32 bytes aleatórios, codificados em hexadecimal; vinculado à sessão |
+| `deadline` | Timestamp Unix de validade lógica da prévia/credenciais |
+| `sheets` | Nomes das abas processadas |
+| `expires` | Validade das novas contas ou vazio |
+| `summary` | Contadores `total`, `new`, `existing`, `duplicate`, `error` |
+| `records` | Linhas; presente em `get` e `preview`, omitido no progresso |
+| `offset` | Número de candidatos processados, incluindo conflitos detectados ao gravar |
+| `created` | Quantidade efetivamente criada e com credencial na sessão |
+| `skipped` | Contas preservadas porque passaram a existir depois da prévia |
+| `sync_pending` | Quantidade de sincronizações ainda pendentes |
+| `done` | Todos os candidatos processados; a sincronização ainda pode estar pendente |
 
-## Endpoints atuais
+Cada linha contém `username` (matrícula textual), `name`, `course`, `line` original, `status` e `error` (mensagem ou vazio). Estados: `new`, `existing`, `duplicate`, `error`.
 
-## GET /api/user_register/settings/get
+O job público nunca inclui a lista de senhas ou os hashes. Apenas a ação explícita `download` retorna as credenciais emitidas nessa sessão.
 
-Descricao:
+## Idempotência e concorrência
 
-- Endpoint inicial de teste de comunicacao UI <-> backend.
+O cliente envia o `offset` conhecido. Se for menor que o já gravado, o servidor devolve o progresso, sem recriar o lote. Se for maior ou não for inteiro, rejeita. O cliente não envia a lista de usuários a criar: o servidor usa a prévia guardada na sessão.
 
-Resposta atual:
+O lock nativo de sessão serializa as requisições de um operador, inclusive abas do mesmo navegador. Outro operador possui outra sessão. Na persistência, o lock de `Config` recarrega a configuração e o modelo é instanciado **depois** desse lock. Nomes existentes são conferidos novamente antes de criar.
 
-{
-  "status": "success",
-  "message": "O backend recebeu sua requisicao com sucesso!"
-}
+Uma linha inválida bloqueia o arquivo inteiro antes do primeiro lote. Durante a execução, a atomicidade é por lote e não existe rollback do arquivo inteiro. Um crash entre persistência do config e persistência da sessão pode exigir redefinição manual da senha de contas já criadas; consulte o README.
 
-## Endpoints planejados
+## Download e retenção
 
-## GET /api/user_register/settings/list
+CSV: `matricula;nome;curso;senha;validade`. O frontend transforma o texto em arquivo local com Blob, sem colocar token ou dados pessoais na URL. Campos com indicadores de fórmulas são neutralizados; matrículas recebem prefixo textual para preservar zeros. Esse CSV é de entrega de credenciais, não o modelo de entrada do plugin.
 
-Descricao:
+Dados sensíveis ficam disponíveis por 30 minutos após o último lote/importação/sincronização. O prazo é aplicado no próximo acesso ao backend; a coleta física de sessões ociosas depende do PHP. `clear` apaga imediatamente o job da sessão. Não encerra a sessão de administração do OPNsense.
 
-- Lista registros de usuario para preencher a tela.
+## Compatibilidade com o protótipo
 
-Resposta de sucesso (exemplo):
-
-{
-  "status": "success",
-  "message": "Lista carregada",
-  "data": {
-    "items": []
-  }
-}
-
-## POST /api/user_register/settings/save
-
-Descricao:
-
-- Cria ou atualiza registro de usuario.
-
-Payload base (exemplo):
-
-{
-  "username": "",
-  "email": "",
-  "enabled": true
-}
-
-Erros esperados:
-
-- Campo obrigatorio ausente
-- Formato invalido
-- Registro duplicado
-
-## Convencoes de nome
-
-- Use nomes de acao claros: list/get/save/delete
-- Evite endpoint generico sem semantica
-- Mantenha consistencia entre nome da acao e comportamento
-
-## Versionamento do contrato
-
-Quando houver mudanca de payload ou semantica:
-
-- Atualizar este documento na mesma PR
-- Registrar impacto no README
-- Descrever plano de compatibilidade, se necessario
+O antigo `get` estático foi substituído pelo diagnóstico e recuperação de job. As ações `list` e `save` descritas na documentação antiga eram apenas propostas e não foram implementadas: a listagem/edição permanente continua no gerenciador nativo do OPNsense.

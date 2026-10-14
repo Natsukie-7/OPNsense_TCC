@@ -1,0 +1,15 @@
+{
+    "name": "opnsense/user-register-reader",
+    "description": "Leitor XLSX do plugin User Register",
+    "type": "library",
+    "require": {
+        "php": ">=8.2",
+        "ext-zip": "*",
+        "ext-simplexml": "*",
+        "shuchkin/simplexlsx": "^1.1"
+    },
+    "config": {
+        "allow-plugins": false,
+        "sort-packages": true
+    }
+}
